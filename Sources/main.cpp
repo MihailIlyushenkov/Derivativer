@@ -7,9 +7,9 @@ int wassimplified = 0;
 int get_op_priority(operation a) {
     switch(a) {
         case add: return 0;
-        case sub: return 0;
-        case mul: return 1;
-        case _div: return 2;
+        case sub: return 1;
+        case mul: return 2;
+        case _div: return 3;
         default: return -1;
     }
 }
@@ -238,7 +238,7 @@ int is_possible_rem_neutral_el(Node* tree) { //only for nodes of operation type 
 }
 
 int try_rem_neutral_el (Node* tree) {
-    printf("remnel");
+    // printf("remnel");
     Node* NewLeft = nullptr;
     Node* NewRight = nullptr;
 
@@ -336,7 +336,6 @@ int simplify_constants(Node* tree) {
 }
 
 int simplify_neutral_elements(Node* tree) {
-    printf("smnel");
     if ((tree->type == value) || (tree->type == variable)) {
         return 0;
     }
@@ -363,38 +362,21 @@ int simplify(Node* tree) {
 }
 
 Node* derivative(Node* tree) {
-    printf("derivating ");
-    if (tree->type == oper) {
-        printf("operation %c\n", operation_to_char(tree->key));
-    }
-    else if (tree->type == variable) {
-        printf("variable %d\n", tree->key);
-    }
-    else if (tree->type == value) {
-        printf("value %d\n", tree->key);
-    }
-    else printf("smth is broken\n");
-
     Node* NewNode = nullptr;
 
     if (tree->type == value) {
-        printf("val\n");
         NewNode = create_node(0);
     }
     else if (tree->type == variable) {
-        printf("var\n");
         NewNode = create_node(1);
     }
     else if (tree->type == oper) {
-        printf("oper\n");
         if ((int_to_operation(tree->key) == add) || (int_to_operation(tree->key) == sub)) {
-            printf("add or sub\n");
             NewNode = node_copy(tree);
             NewNode->left = derivative(tree_copy(tree->left));
             NewNode->right = derivative(tree_copy(tree->right));
         }
         else if (int_to_operation(tree->key) == mul) {
-            printf("mul\n");
             NewNode = create_node(symb_operation_to_int('+'));
             NewNode->left = create_node(symb_operation_to_int('*'));
             NewNode->right = create_node(symb_operation_to_int('*'));
@@ -412,7 +394,6 @@ Node* derivative(Node* tree) {
         }
 
         else if (int_to_operation(tree->key) == _div) {
-            printf("div\n");
             NewNode = create_node(symb_operation_to_int('/'));
             NewNode->left = create_node(symb_operation_to_int('-'));
             NewNode->right = create_node(symb_operation_to_int('*'));
@@ -440,7 +421,6 @@ Node* derivative(Node* tree) {
     else printf("smth is broken\n");
     // printf("free");
     // tree_free(tree);
-    printf("return");
     return NewNode;
 }
 
@@ -474,7 +454,6 @@ int main()
 
     printf("\n");
     tree_print(der1);
-    getchar();
     printf("\n");
     simplify(der1);
     tree_print(der1);
