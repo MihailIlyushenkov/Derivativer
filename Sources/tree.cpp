@@ -12,14 +12,14 @@ int tree_free(Node* tree)
 	return 0;
 }
 
-Node* create_node(int key)
+Node* create_node(int key, nodetype typ, Node* nodeleft, Node* noderight)
 {
     Node* newNode = (Node*) malloc(sizeof(Node));
-    newNode->type = value;
+    newNode->type = typ;
     newNode->verified = 0;
 	newNode->key = key;
-    newNode->left = nullptr;
-	newNode->right = nullptr;
+    newNode->left = nodeleft;
+	newNode->right = noderight;
     return newNode;
 }
 
@@ -39,8 +39,7 @@ Node* tree_copy(Node* tree) {
         return nullptr;
     }
     else {
-        Node* NewNode = create_node(tree->key);
-        NewNode->type = tree->type;
+        Node* NewNode = create_node(tree->key, tree->type, nullptr, nullptr);
         NewNode->left = tree_copy(tree->left);
         NewNode->right = tree_copy(tree->right);
         return NewNode;
@@ -50,8 +49,7 @@ Node* tree_copy(Node* tree) {
 Node* node_copy(Node* node) {
     if (node == nullptr) return nullptr;
     else {
-        Node* NewNode = create_node(node->key);
-        NewNode->type = node->type;
+        Node* NewNode = create_node(node->key, node->type, nullptr, nullptr);
         return NewNode;
     }
 }
@@ -59,7 +57,7 @@ Node* node_copy(Node* node) {
 int insert(Node** p, int k) // вставка ключа k в узел p (возможно нулевой)
 {
 	if( !p ) {
-		*p = create_node(k);
+		*p = create_node(k, variable, nullptr, nullptr);
 		return 0;
     }
     else {

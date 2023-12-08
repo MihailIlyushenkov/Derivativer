@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Tree.h"
+#include "Parser.h"
+
 int MAXTREEDEEP = 20;
 int wassimplified = 0;
 
@@ -53,6 +55,7 @@ int operation_to_char(int a) {
         default: printf("you idiot, %d is not operation\n", a); return 0;
     }
 }
+
 
 int tree_print(Node* tree)
 {
@@ -113,7 +116,7 @@ int _tree_read (Node** tree, FILE* file, int reclevel)
 
 	switch (a) {
     case '(':
-                *tree = create_node(0);
+                *tree = create_node(0, value, nullptr, nullptr);
                 b = fgetc(file);
                 if ((b < '0') || ('9' < b)) {
                     _tree_read(&((*tree)->left), file, reclevel+1);
@@ -158,7 +161,7 @@ int _tree_read (Node** tree, FILE* file, int reclevel)
 	case ')':   return 0;
     // case 0:     return 0;
 
-	default:    *tree = create_node(0);
+	default:    *tree = create_node(0, value, nullptr, nullptr);
                 printf("readed: %c in default\n", a);
                 if (is_operation(a) == 1) {
                     printf("found operation\n");
@@ -213,8 +216,6 @@ int _simplify_constants(Node* tree) { //only for nodes of operation type, where 
 
     return 0;
 }
-
-// int remove_neutral_element(Node* tree)
 
 int can_calc(Node* tree) { //only for nodes of operation type
     if ((tree->left == nullptr) || (tree->right == nullptr)) {
@@ -365,10 +366,10 @@ Node* derivative(Node* tree) {
     Node* NewNode = nullptr;
 
     if (tree->type == value) {
-        NewNode = create_node(0);
+        NewNode = create_node(0, value, nullptr, nullptr);
     }
     else if (tree->type == variable) {
-        NewNode = create_node(1);
+        NewNode = create_node(1, value, nullptr, nullptr);
     }
     else if (tree->type == oper) {
         if ((int_to_operation(tree->key) == add) || (int_to_operation(tree->key) == sub)) {
@@ -377,13 +378,9 @@ Node* derivative(Node* tree) {
             NewNode->right = derivative(tree_copy(tree->right));
         }
         else if (int_to_operation(tree->key) == mul) {
-            NewNode = create_node(symb_operation_to_int('+'));
-            NewNode->left = create_node(symb_operation_to_int('*'));
-            NewNode->right = create_node(symb_operation_to_int('*'));
-
-            NewNode->type = oper;
-            NewNode->left->type = oper;
-            NewNode->right->type = oper;
+            NewNode = create_node(symb_operation_to_int('+'), oper, nullptr, nullptr);
+            NewNode->left = create_node(symb_operation_to_int('*'), oper, nullptr, nullptr);
+            NewNode->right = create_node(symb_operation_to_int('*'), oper, nullptr, nullptr);
 
             NewNode->left->left = derivative(tree_copy(tree->left));
             NewNode->left->right = tree_copy(tree->right);
@@ -394,18 +391,18 @@ Node* derivative(Node* tree) {
         }
 
         else if (int_to_operation(tree->key) == _div) {
-            NewNode = create_node(symb_operation_to_int('/'));
-            NewNode->left = create_node(symb_operation_to_int('-'));
-            NewNode->right = create_node(symb_operation_to_int('*'));
+            NewNode = create_node(symb_operation_to_int('/'), oper, nullptr, nullptr);
+            NewNode->left = create_node(symb_operation_to_int('-'), oper, nullptr, nullptr);
+            NewNode->right = create_node(symb_operation_to_int('*'), oper, nullptr, nullptr);
 
-            NewNode->left->left = create_node(symb_operation_to_int('*'));
-            NewNode->left->right = create_node(symb_operation_to_int('*'));
+            NewNode->left->left = create_node(symb_operation_to_int('*'), oper, nullptr, nullptr);
+            NewNode->left->right = create_node(symb_operation_to_int('*'), oper, nullptr, nullptr);
 
-            NewNode->type = oper;
-            NewNode->left->type = oper;
-            NewNode->right->type = oper;
-            NewNode->left->left->type = oper;
-            NewNode->left->right->type = oper;
+            // NewNode->type = oper;
+            // NewNode->left->type = oper;
+            // NewNode->right->type = oper;
+            // NewNode->left->left->type = oper;
+            // NewNode->left->right->type = oper;
 
             NewNode->left->left->left = derivative(tree_copy(tree->left));
             NewNode->left->left->right = tree_copy(tree->right);
@@ -424,42 +421,22 @@ Node* derivative(Node* tree) {
     return NewNode;
 }
 
+size_t MAXSTRIGLENGHT = 100;
+
 int main()
 {
-
-    Node* tree = create_node(symb_operation_to_int('/'));
-    tree->type = oper;
-    tree->left = create_node(symb_operation_to_int('+'));
-    tree->left->type = oper;
-    tree->right = create_node(symb_operation_to_int('-'));
-    tree->right->type = oper;
-
-    tree->left->left = create_node(0);
-    tree->left->left->type = variable;
-    tree->left->right = create_node(3);
-
-    tree->right->left = create_node(0);
-    tree->right->left->type = variable;
-    tree->right->right = create_node(2);
-
-    // Node* tree;
-    // tree_read(&tree, "Tree.txt");
-    // printf("reading ended\n");
-
-
+    char* buf = readbuf(MAXSTRIGLENGHT, "Tree.txt");
+    Node* tree = GetG(buf);
+    printf("readed:\n");
     tree_print(tree);
     printf("\n");
 
     Node* der1 = derivative(tree);
-
-    printf("\n");
+    printf("derivated:\n");
     tree_print(der1);
     printf("\n");
+
+    printf("simplified:\n");
     simplify(der1);
     tree_print(der1);
-    // simplify(der1);
-    // printf("\n");
-    // tree_print(der1);
-
-    return 0;
 }
